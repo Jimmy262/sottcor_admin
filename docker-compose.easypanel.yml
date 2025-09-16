@@ -1,0 +1,62 @@
+# Docker Compose optimizado para EasyPanel
+version: '3.8'
+
+services:
+  sottcor-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: sottcor-admin:latest
+    container_name: sottcor-admin
+    restart: unless-stopped
+
+    # Variables de entorno para producción
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_TELEMETRY_DISABLED=1
+      # Variables de base de datos (configurar en EasyPanel)
+      - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+
+    # Puerto interno
+    ports:
+      - "3000:3000"
+
+    # Health check para EasyPanel
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/auth/verify"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Límites de recursos
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+    # Configuración de logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Labels para EasyPanel (opcional - configurable)
+    labels:
+      - "app.name=sottcor-admin"
+      - "app.version=1.0.0"
+      - "app.description=Sistema de asignación de pesos para vendedores"
+
+# Configuración de red para EasyPanel
+networks:
+  default:
+    external: false
