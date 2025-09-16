@@ -73,8 +73,8 @@ USER nextjs
 EXPOSE 3000
 
 # Health check optimizado para EasyPanel
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/auth/verify || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/" > /dev/null || exit 1
 
 # Usar dumb-init para manejo correcto de señales
 ENTRYPOINT ["dumb-init", "--"]
