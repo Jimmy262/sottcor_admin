@@ -1,5 +1,7 @@
 'use client'
 
+import { memo, useMemo } from 'react'
+
 interface Vendedor {
   user_id: number
   user_name: string
@@ -12,27 +14,31 @@ interface WeightDistributionProps {
   vendedores: Vendedor[]
 }
 
-export default function WeightDistribution({ vendedores }: WeightDistributionProps) {
-  if (vendedores.length === 0) {
+function WeightDistribution({ vendedores }: WeightDistributionProps) {
+  // Memoizar cálculos pesados
+  const { totalWeight, vendedoresWithPercentage, avgWeight } = useMemo(() => {
+    const total = vendedores.reduce((sum, v) => sum + v.peso, 0)
+
+    const withPercentage = vendedores
+      .filter(v => v.peso > 0)
+      .map(vendedor => ({
+        ...vendedor,
+        percentage: total > 0 ? (vendedor.peso / total) * 100 : 0
+      }))
+      .sort((a, b) => b.peso - a.peso)
+
+    const avg = withPercentage.length > 0 ? total / withPercentage.length : 0
+
+    return {
+      totalWeight: total,
+      vendedoresWithPercentage: withPercentage,
+      avgWeight: avg
+    }
+  }, [vendedores])
+
+  if (vendedores.length === 0 || totalWeight === 0) {
     return null
   }
-
-  // Calcular el peso total
-  const totalWeight = vendedores.reduce((sum, v) => sum + v.peso, 0)
-
-  // Si no hay peso asignado, no mostrar la distribución
-  if (totalWeight === 0) {
-    return null
-  }
-
-  // Calcular porcentajes para cada vendedor
-  const vendedoresWithPercentage = vendedores
-    .filter(v => v.peso > 0) // Solo vendedores con peso
-    .map(vendedor => ({
-      ...vendedor,
-      percentage: (vendedor.peso / totalWeight) * 100
-    }))
-    .sort((a, b) => b.peso - a.peso) // Ordenar por peso descendente
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 mb-6">
@@ -98,7 +104,7 @@ export default function WeightDistribution({ vendedores }: WeightDistributionPro
           <div>
             <span className="text-gray-700">Peso promedio:</span>
             <span className="ml-2 font-medium text-gray-900">
-              {(totalWeight / vendedoresWithPercentage.length).toFixed(1)}
+              {avgWeight.toFixed(1)}
             </span>
           </div>
         </div>
@@ -106,3 +112,5 @@ export default function WeightDistribution({ vendedores }: WeightDistributionPro
     </div>
   )
 }
+
+export default memo(WeightDistribution)

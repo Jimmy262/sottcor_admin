@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import VendedorWeightList from '@/components/VendedorWeightList'
 import LoginForm from '@/components/LoginForm'
@@ -64,7 +64,7 @@ export default function Home() {
     setTimeout(() => setMessage(null), 5000)
   }
 
-  const handleUpdateWeight = async (vendedorId: number, newWeight: number) => {
+  const handleUpdateWeight = useCallback(async (vendedorId: number, newWeight: number) => {
     if (!selectedInbox) {
       showMessage('error', 'No hay inbox seleccionado')
       return
@@ -76,6 +76,19 @@ export default function Home() {
       showMessage('error', 'Vendedor no encontrado')
       return
     }
+
+    // Guardar el estado anterior para rollback
+    const previousVendedores = [...vendedores]
+    const previousWeight = vendedor.peso
+
+    // 🚀 OPTIMISTIC UPDATE: Actualizar UI inmediatamente
+    setVendedores(prev =>
+      prev.map(v =>
+        v.user_id === vendedorId
+          ? { ...v, peso: newWeight }
+          : v
+      )
+    )
 
     try {
       const response = await fetch(`/api/vendedores/${vendedorId}`, {
@@ -92,17 +105,23 @@ export default function Home() {
 
       if (response.ok) {
         showMessage('success', 'Peso actualizado exitosamente')
-        fetchVendedores()
+        // No necesitamos fetchVendedores() porque ya actualizamos optimistamente
       } else if (response.status === 401) {
         showMessage('error', 'Sesión expirada. Por favor inicia sesión nuevamente.')
+        // Rollback en caso de error
+        setVendedores(previousVendedores)
       } else {
         const error = await response.json()
         showMessage('error', error.error || 'Error al actualizar peso')
+        // Rollback en caso de error
+        setVendedores(previousVendedores)
       }
     } catch {
       showMessage('error', 'Error de conexión')
+      // Rollback en caso de error
+      setVendedores(previousVendedores)
     }
-  }
+  }, [vendedores, selectedInbox])
 
   const handleLoginSuccess = () => {
     login()

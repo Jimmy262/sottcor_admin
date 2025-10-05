@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo, useCallback } from 'react'
 import WeightModal from './WeightModal'
 
 interface Vendedor {
@@ -16,7 +16,48 @@ interface VendedorWeightListProps {
   onUpdateWeight: (vendedorId: number, newWeight: number) => void
 }
 
-export default function VendedorWeightList({ vendedores, onUpdateWeight }: VendedorWeightListProps) {
+// Componente individual memoizado para evitar re-renders innecesarios
+const VendedorCard = memo(({
+  vendedor,
+  onEdit
+}: {
+  vendedor: Vendedor
+  onEdit: (vendedor: Vendedor) => void
+}) => {
+  return (
+    <div
+      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+      onClick={() => onEdit(vendedor)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-medium">
+              {vendedor.user_name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">
+              {vendedor.user_name}
+            </h3>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-700">
+            Peso: {vendedor.peso}
+          </span>
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+VendedorCard.displayName = 'VendedorCard'
+
+function VendedorWeightList({ vendedores, onUpdateWeight }: VendedorWeightListProps) {
   const [selectedVendedor, setSelectedVendedor] = useState<Vendedor | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -44,19 +85,19 @@ export default function VendedorWeightList({ vendedores, onUpdateWeight }: Vende
     return 'bg-gradient-to-r from-red-400 to-red-500'
   }
 
-  const handleEditWeight = (vendedor: Vendedor) => {
+  const handleEditWeight = useCallback((vendedor: Vendedor) => {
     setSelectedVendedor(vendedor)
     setIsModalOpen(true)
-  }
+  }, [])
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedVendedor(null)
     setIsModalOpen(false)
-  }
+  }, [])
 
-  const handleSaveWeight = (vendedorId: number, newWeight: number) => {
+  const handleSaveWeight = useCallback((vendedorId: number, newWeight: number) => {
     onUpdateWeight(vendedorId, newWeight)
-  }
+  }, [onUpdateWeight])
 
   if (vendedores.length === 0) {
     return (
@@ -71,34 +112,11 @@ export default function VendedorWeightList({ vendedores, onUpdateWeight }: Vende
     <>
       <div className="space-y-3">
         {vendedores.map((vendedor) => (
-          <div
+          <VendedorCard
             key={vendedor.user_id}
-            className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-            onClick={() => handleEditWeight(vendedor)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {vendedor.user_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    {vendedor.user_name}
-                  </h3>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  Peso: {vendedor.peso}
-                </span>
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
+            vendedor={vendedor}
+            onEdit={handleEditWeight}
+          />
         ))}
       </div>
 
@@ -111,3 +129,5 @@ export default function VendedorWeightList({ vendedores, onUpdateWeight }: Vende
     </>
   )
 }
+
+export default memo(VendedorWeightList)
