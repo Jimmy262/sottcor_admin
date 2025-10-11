@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated } from '@/lib/auth'
-import { updateVendedorPeso, checkUserExists, checkInboxExists } from '@/lib/database'
+import { updateMessageWeight, checkUserExists, checkMessageExists } from '@/lib/database'
 
-// PUT - Actualizar peso de un vendedor en un inbox específico
+// PUT - Actualizar peso de un vendedor para un mensaje específico
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,7 +18,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { peso, inboxId } = body
+    const { peso, messageId } = body
 
     // Validar parámetros
     if (typeof peso !== 'number' || peso < 0) {
@@ -28,15 +28,15 @@ export async function PUT(
       )
     }
 
-    if (!inboxId) {
+    if (!messageId) {
       return NextResponse.json(
-        { error: 'ID del inbox requerido' },
+        { error: 'ID del mensaje requerido' },
         { status: 400 }
       )
     }
 
-    const userId = parseInt(id)
-    const inboxIdNum = parseInt(inboxId)
+    const userId = BigInt(id)
+    const messageIdBig = BigInt(messageId)
 
     // Verificar que el usuario existe
     const userExists = await checkUserExists(userId)
@@ -47,22 +47,22 @@ export async function PUT(
       )
     }
 
-    // Verificar que el inbox existe
-    const inboxExists = await checkInboxExists(inboxIdNum)
-    if (!inboxExists) {
+    // Verificar que el mensaje existe
+    const messageExists = await checkMessageExists(messageIdBig)
+    if (!messageExists) {
       return NextResponse.json(
-        { error: 'Inbox no encontrado' },
+        { error: 'Mensaje no encontrado' },
         { status: 404 }
       )
     }
 
     // Actualizar peso
-    await updateVendedorPeso(userId, inboxIdNum, peso)
+    await updateMessageWeight(messageIdBig, userId, peso)
 
     return NextResponse.json({
       message: 'Peso actualizado exitosamente',
-      userId,
-      inboxId: inboxIdNum,
+      userId: userId.toString(),
+      messageId: messageIdBig.toString(),
       peso
     })
   } catch (error) {

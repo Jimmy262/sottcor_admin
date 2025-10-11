@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 
 interface Vendedor {
-  user_id: number
+  user_id: string
   user_name: string
-  inbox_id: number
-  inbox_name: string
+  message_id: string
+  message_text: string
   peso: number
 }
 
@@ -14,7 +14,7 @@ interface WeightModalProps {
   vendedor: Vendedor | null
   isOpen: boolean
   onClose: () => void
-  onSave: (vendedorId: number, newWeight: number) => void
+  onSave: (vendedorId: string, newWeight: number) => void
 }
 
 export default function WeightModal({ vendedor, isOpen, onClose, onSave }: WeightModalProps) {

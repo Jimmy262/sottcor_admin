@@ -3,10 +3,10 @@
 import { memo, useMemo } from 'react'
 
 interface Vendedor {
-  user_id: number
+  user_id: string
   user_name: string
-  inbox_id: number
-  inbox_name: string
+  message_id: string
+  message_text: string
   peso: number
 }
 

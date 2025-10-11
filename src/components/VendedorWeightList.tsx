@@ -4,16 +4,16 @@ import { useState, memo, useCallback } from 'react'
 import WeightModal from './WeightModal'
 
 interface Vendedor {
-  user_id: number
+  user_id: string
   user_name: string
-  inbox_id: number
-  inbox_name: string
+  message_id: string
+  message_text: string
   peso: number
 }
 
 interface VendedorWeightListProps {
   vendedores: Vendedor[]
-  onUpdateWeight: (vendedorId: number, newWeight: number) => void
+  onUpdateWeight: (vendedorId: string, newWeight: number) => void
 }
 
 // Componente individual memoizado para evitar re-renders innecesarios
@@ -95,7 +95,7 @@ function VendedorWeightList({ vendedores, onUpdateWeight }: VendedorWeightListPr
     setIsModalOpen(false)
   }, [])
 
-  const handleSaveWeight = useCallback((vendedorId: number, newWeight: number) => {
+  const handleSaveWeight = useCallback((vendedorId: string, newWeight: number) => {
     onUpdateWeight(vendedorId, newWeight)
   }, [onUpdateWeight])
 

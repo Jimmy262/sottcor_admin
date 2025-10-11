@@ -9,7 +9,7 @@ interface Inbox {
 
 interface InboxSelectorProps {
   selectedInbox: string | null
-  onInboxChange: (inboxName: string) => void
+  onInboxChange: (inboxName: string, inboxId: number) => void
 }
 
 export default function InboxSelector({ selectedInbox, onInboxChange }: InboxSelectorProps) {
@@ -33,7 +33,7 @@ export default function InboxSelector({ selectedInbox, onInboxChange }: InboxSel
 
         // Auto-seleccionar el primer inbox si no hay uno seleccionado
         if (data.length > 0 && !selectedInbox) {
-          onInboxChange(data[0].name)
+          onInboxChange(data[0].name, data[0].id)
         }
       } else if (response.status === 401) {
         setError('Sesión expirada')
@@ -74,7 +74,12 @@ export default function InboxSelector({ selectedInbox, onInboxChange }: InboxSel
       <select
         id="inbox-select"
         value={selectedInbox || ''}
-        onChange={(e) => onInboxChange(e.target.value)}
+        onChange={(e) => {
+          const selectedInbox = inboxes.find(i => i.name === e.target.value)
+          if (selectedInbox) {
+            onInboxChange(selectedInbox.name, selectedInbox.id)
+          }
+        }}
         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 bg-white text-gray-900"
       >
         <option value="">Selecciona un inbox para comenzar</option>
